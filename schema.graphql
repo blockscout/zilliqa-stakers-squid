@@ -1,0 +1,13 @@
+type Staker @entity {
+  id: ID!
+  index: Int
+  balance: BigInt!
+  peerId: Bytes
+  controlAddressHash: Bytes
+  rewardAddressHash: Bytes
+  signingAddressHash: Bytes
+  addedAtBlockNumber: Int!
+  stakeUpdatedAtBlockNumber: Int!
+  insertedAt: DateTime!
+  updatedAt: DateTime!
+}
