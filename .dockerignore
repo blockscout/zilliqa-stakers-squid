@@ -1,0 +1,10 @@
+.vscode
+.direnv
+abi
+lib
+node_modules
+.dockerignore
+*.env*
+.gitignore
+Dockerfile
+flake.*
