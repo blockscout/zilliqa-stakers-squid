@@ -27,7 +27,16 @@ indexer specifically targets the [`Deposit` contract][deposit-contract].
     DB_URL=postgresql://postgres:postgres@localhost:5432/zilliqa
     ```
 
-2. **Run the Docker container**: 
+1. **Expose Prometheus Metrics (Optional)**: To enable Prometheus metrics, set
+   the `PROMETHEUS_PORT` environment variable in the `.env` file. Metrics will
+   be accessible at `http://localhost:<PROMETHEUS_PORT>/metrics` within the
+   container.
+
+    ```env
+    PROMETHEUS_PORT=3000
+    ```
+
+1. **Run the Docker container**: 
 
     ```bash
     docker run --env-file .env ghcr.io/blockscout/zilliqa-stakers-squid:0.1.0
