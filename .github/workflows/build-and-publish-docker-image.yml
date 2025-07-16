@@ -1,4 +1,4 @@
-name: Build and publish Docker image
+name: Build and publish GHCR image
 
 on:
   push:
@@ -10,7 +10,7 @@ env:
 
 jobs:
   push_to_registry:
-    name: Push Docker image to Docker Hub
+    name: Push Docker image to GHCR
     runs-on: ubuntu-latest
     steps:
       - name: Log in to GitHub Container Registry
