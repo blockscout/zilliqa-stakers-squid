@@ -33,6 +33,37 @@ const stakersToFetchAtBlockNumber = new Map<number, Staker[]>();
 processor.run(db, async ctx => {
     const keyToStaker = new Map<String, Staker>();
 
+    // Fetch initial data only for FROM_BLOCK_NUMBER if not already done
+    if (ctx.blocks[0].header.height === FROM_BLOCK_NUMBER) {
+        ctx.log.info(`Fetching initial stakers data at block ${FROM_BLOCK_NUMBER}...`);
+        let contract = new depositAbi.Contract(ctx, ctx.blocks[0].header, CONTRACT_ADDRESS);
+
+        try {
+            let { stakerKeys, indices, balances, stakers } = await contract.getStakersData();
+            ctx.log.info(`Found ${stakerKeys.length} initial stakers`);
+
+            for (let i = 0; i < stakerKeys.length; i++) {
+                let staker = new Staker({
+                    id: stakerKeys[i],
+                    addedAtBlockNumber: FROM_BLOCK_NUMBER,
+                    stakeUpdatedAtBlockNumber: FROM_BLOCK_NUMBER,
+                    balance: balances[i],
+                    index: Number(indices[i]) - 1,
+                    peerId: hexToBytes(stakers[i].peerId),
+                    controlAddressHash: hexToBytes(stakers[i].controlAddress),
+                    rewardAddressHash: hexToBytes(stakers[i].rewardAddress),
+                    signingAddressHash: hexToBytes(stakers[i].signingAddress),
+                    insertedAt: new Date(),
+                    updatedAt: new Date()
+                });
+                keyToStaker.set(staker.id, staker);
+                ctx.log.info(`Initial staker: ${staker.id} with index ${staker.index} and balance ${staker.balance}`);
+            }
+        } catch (error) {
+            ctx.log.error({ error }, 'Failed to fetch initial stakers data');
+        }
+    }
+
     // If reorg happened, we need to update stakers pending to fetch
     if (lastProcessedBlockNumber >= ctx.blocks[0].header.height) {
         await ctx.store.find(Staker, { where: { index: null } }).then(
@@ -52,7 +83,7 @@ processor.run(db, async ctx => {
         if (stakersToFetchAtBlockNumber.has(block.header.height)) {
             let contract = new depositAbi.Contract(ctx, block.header, CONTRACT_ADDRESS)
             for (let staker of stakersToFetchAtBlockNumber.get(block.header.height)) {
-                let { index, staker: stakerData } = await contract.getStakerData(staker.id)
+                let { index, stakerData } = await contract.getStakerData(staker.id)
                 ctx.log.info(`Retrieved staker data: ${index} ${stakerData.peerId} ${stakerData.controlAddress} ${stakerData.rewardAddress} ${stakerData.signingAddress}`)
                 staker.index = Number(index) - 1
                 staker.peerId = hexToBytes(stakerData.peerId)

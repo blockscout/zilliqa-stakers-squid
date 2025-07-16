@@ -6,6 +6,7 @@ export const events = {
     Initialized: event("0xc7f505b2f371ae2175ee4913f4499e1f2633a7b5936321eed1cdaeb6115181d2", "Initialized(uint64)", {"version": p.uint64}),
     StakeChanged: event("0x982c643743b64ff403bb17cd1f20dd6c3bca86325c6ad3d5cddaf08b57b22113", "StakeChanged(bytes,uint256,uint256)", {"blsPubKey": p.bytes, "atFutureBlock": p.uint256, "newStake": p.uint256}),
     StakerAdded: event("0xc758b38fca30d8a2d8b0de67b5fc116c2cdc671f466eda1eaa9dc0543785bd2a", "StakerAdded(bytes,uint256,uint256)", {"blsPubKey": p.bytes, "atFutureBlock": p.uint256, "newStake": p.uint256}),
+    StakerMoved: event("0x1fcd881c04a1b37d40605f61aa7e5e8fc91a999c19d5234f1da15927c38be492", "StakerMoved(bytes,uint256,uint256)", {"blsPubKey": p.bytes, "newPosition": p.uint256, "atFutureBlock": p.uint256}),
     StakerRemoved: event("0x76d0906eff21f332e44d50ba0e3eb461a4c398e4e6e12b0b6dfc52c914ad2ca0", "StakerRemoved(bytes,uint256)", {"blsPubKey": p.bytes, "atFutureBlock": p.uint256}),
     StakerUpdated: event("0xde5c2a0bd8463eb96dec5195e1024ecc0302475078998dced1b296bd8ffb2686", "StakerUpdated(bytes)", {"blsPubKey": p.bytes}),
     Upgraded: event("0xbc7cd75a20ee27fd9adebab32041f755214dbc6bffa90cc0225b39da2e5c2d3b", "Upgraded(address)", {"implementation": indexed(p.address)}),
@@ -17,7 +18,7 @@ export const functions = {
     blocksPerEpoch: viewFun("0xf0682054", "blocksPerEpoch()", {}, p.uint64),
     currentEpoch: viewFun("0x76671808", "currentEpoch()", {}, p.uint64),
     deposit: fun("0x19f44af5", "deposit(bytes,bytes,bytes,address,address)", {"blsPubKey": p.bytes, "peerId": p.bytes, "signature": p.bytes, "rewardAddress": p.address, "signingAddress": p.address}, ),
-    depositTopup: fun("0x90948c25", "depositTopup()", {}, ),
+    depositTopup: fun("0x218753e6", "depositTopup(bytes)", {"blsPubKey": p.bytes}, ),
     getControlAddress: viewFun("0x584aad1e", "getControlAddress(bytes)", {"blsPubKey": p.bytes}, p.address),
     getFutureStake: viewFun("0x23edbaca", "getFutureStake(bytes)", {"blsPubKey": p.bytes}, p.uint256),
     getFutureTotalStake: viewFun("0xdef54646", "getFutureTotalStake()", {}, p.uint256),
@@ -25,24 +26,24 @@ export const functions = {
     getRewardAddress: viewFun("0xd64345a9", "getRewardAddress(bytes)", {"blsPubKey": p.bytes}, p.address),
     getSigningAddress: viewFun("0x40be3fb1", "getSigningAddress(bytes)", {"blsPubKey": p.bytes}, p.address),
     getStake: viewFun("0x41f09723", "getStake(bytes)", {"blsPubKey": p.bytes}, p.uint256),
-    getStakerData: viewFun("0xed88cb39", "getStakerData(bytes)", {"blsPubKey": p.bytes}, {"index": p.uint256, "balance": p.uint256, "staker": p.struct({"controlAddress": p.address, "rewardAddress": p.address, "peerId": p.bytes, "withdrawals": p.struct({"values": p.array(p.struct({"startedAt": p.uint256, "amount": p.uint256})), "head": p.uint256, "len": p.uint256}), "signingAddress": p.address})}),
+    getStakerData: viewFun("0xed88cb39", "getStakerData(bytes)", {"blsPubKey": p.bytes}, {"index": p.uint256, "balance": p.uint256, "stakerData": p.struct({"controlAddress": p.address, "rewardAddress": p.address, "peerId": p.bytes, "withdrawals": p.array(p.struct({"startedAt": p.uint256, "amount": p.uint256})), "signingAddress": p.address})}),
     getStakers: viewFun("0x43352d61", "getStakers()", {}, p.array(p.bytes)),
-    getStakersData: viewFun("0x01a851ce", "getStakersData()", {}, {"stakerKeys": p.array(p.bytes), "indices": p.array(p.uint256), "balances": p.array(p.uint256), "stakers": p.array(p.struct({"controlAddress": p.address, "rewardAddress": p.address, "peerId": p.bytes, "withdrawals": p.struct({"values": p.array(p.struct({"startedAt": p.uint256, "amount": p.uint256})), "head": p.uint256, "len": p.uint256}), "signingAddress": p.address}))}),
+    getStakersData: viewFun("0x01a851ce", "getStakersData()", {}, {"stakerKeys": p.array(p.bytes), "indices": p.array(p.uint256), "balances": p.array(p.uint256), "stakers": p.array(p.struct({"controlAddress": p.address, "rewardAddress": p.address, "peerId": p.bytes, "withdrawals": p.array(p.struct({"startedAt": p.uint256, "amount": p.uint256})), "signingAddress": p.address}))}),
     getTotalStake: viewFun("0x7bc74225", "getTotalStake()", {}, p.uint256),
     leaderAtView: viewFun("0x75afde07", "leaderAtView(uint256)", {"viewNumber": p.uint256}, p.bytes),
     maximumStakers: viewFun("0x8bbc9d11", "maximumStakers()", {}, p.uint256),
     minimumStake: viewFun("0xec5ffac2", "minimumStake()", {}, p.uint256),
     nextUpdate: viewFun("0x6e9c11f9", "nextUpdate()", {}, p.uint256),
     proxiableUUID: viewFun("0x52d1902d", "proxiableUUID()", {}, p.bytes32),
-    reinitialize: fun("0x6c2eb350", "reinitialize()", {}, ),
+    reinitialize: fun("0xffb6c6b6", "reinitialize(uint256)", {"_withdrawalPeriod": p.uint256}, ),
     setControlAddress: fun("0x7d31e34c", "setControlAddress(bytes,address)", {"blsPubKey": p.bytes, "controlAddress": p.address}, ),
     setRewardAddress: fun("0x550b0cbb", "setRewardAddress(bytes,address)", {"blsPubKey": p.bytes, "rewardAddress": p.address}, ),
     setSigningAddress: fun("0x8bc0727a", "setSigningAddress(bytes,address)", {"blsPubKey": p.bytes, "signingAddress": p.address}, ),
-    unstake: fun("0x2e17de78", "unstake(uint256)", {"amount": p.uint256}, ),
+    unstake: fun("0x80a07d2b", "unstake(bytes,uint256)", {"blsPubKey": p.bytes, "amount": p.uint256}, ),
     upgradeToAndCall: fun("0x4f1ef286", "upgradeToAndCall(address,bytes)", {"newImplementation": p.address, "data": p.bytes}, ),
     version: viewFun("0x54fd4d50", "version()", {}, p.uint64),
-    'withdraw(uint256)': fun("0x2e1a7d4d", "withdraw(uint256)", {"count": p.uint256}, ),
-    'withdraw()': fun("0x3ccfd60b", "withdraw()", {}, ),
+    'withdraw(bytes)': fun("0x0968f264", "withdraw(bytes)", {"blsPubKey": p.bytes}, ),
+    'withdraw(bytes,uint256)': fun("0xc7012626", "withdraw(bytes,uint256)", {"blsPubKey": p.bytes, "count": p.uint256}, ),
     withdrawalPeriod: viewFun("0xbca7093d", "withdrawalPeriod()", {}, p.uint256),
 }
 
@@ -141,6 +142,7 @@ export class Contract extends ContractBase {
 export type InitializedEventArgs = EParams<typeof events.Initialized>
 export type StakeChangedEventArgs = EParams<typeof events.StakeChanged>
 export type StakerAddedEventArgs = EParams<typeof events.StakerAdded>
+export type StakerMovedEventArgs = EParams<typeof events.StakerMoved>
 export type StakerRemovedEventArgs = EParams<typeof events.StakerRemoved>
 export type StakerUpdatedEventArgs = EParams<typeof events.StakerUpdated>
 export type UpgradedEventArgs = EParams<typeof events.Upgraded>
@@ -233,11 +235,11 @@ export type UpgradeToAndCallReturn = FunctionReturn<typeof functions.upgradeToAn
 export type VersionParams = FunctionArguments<typeof functions.version>
 export type VersionReturn = FunctionReturn<typeof functions.version>
 
-export type WithdrawParams_0 = FunctionArguments<typeof functions['withdraw(uint256)']>
-export type WithdrawReturn_0 = FunctionReturn<typeof functions['withdraw(uint256)']>
+export type WithdrawParams_0 = FunctionArguments<typeof functions['withdraw(bytes)']>
+export type WithdrawReturn_0 = FunctionReturn<typeof functions['withdraw(bytes)']>
 
-export type WithdrawParams_1 = FunctionArguments<typeof functions['withdraw()']>
-export type WithdrawReturn_1 = FunctionReturn<typeof functions['withdraw()']>
+export type WithdrawParams_1 = FunctionArguments<typeof functions['withdraw(bytes,uint256)']>
+export type WithdrawReturn_1 = FunctionReturn<typeof functions['withdraw(bytes,uint256)']>
 
 export type WithdrawalPeriodParams = FunctionArguments<typeof functions.withdrawalPeriod>
 export type WithdrawalPeriodReturn = FunctionReturn<typeof functions.withdrawalPeriod>
