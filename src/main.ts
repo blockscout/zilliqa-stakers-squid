@@ -124,15 +124,6 @@ processor.run(db, async ctx => {
                         let { blsPubKey, atFutureBlock } = depositAbi.events.StakerRemoved.decode(log)
                         ctx.log.info(`StakerRemoved: ${blsPubKey} ${atFutureBlock}`)
                         let staker = await ctx.store.findOneByOrFail(Staker, { id: blsPubKey })
-                        let stakerWithHighestIndex = await ctx.store.find(Staker, {
-                            where: { balance: MoreThan(BigInt(0)) },
-                            order: { index: 'DESC' }
-                        })[0]
-                        if (staker.id !== stakerWithHighestIndex.id) {
-                            stakerWithHighestIndex.index = staker.index
-                            stakerWithHighestIndex.updatedAt = new Date()
-                            keyToStaker.set(stakerWithHighestIndex.id, stakerWithHighestIndex)
-                        }
                         staker.stakeUpdatedAtBlockNumber = Number(atFutureBlock)
                         staker.balance = BigInt(0)
                         staker.updatedAt = new Date()
@@ -152,7 +143,30 @@ processor.run(db, async ctx => {
                     }
                     break
                 case depositAbi.events.StakerUpdated.topic:
-                    // This event is not emitted by the contract, but is present in the ABI
+                    {
+                        let { blsPubKey } = depositAbi.events.StakerUpdated.decode(log)
+                        ctx.log.info(`StakerUpdated: ${blsPubKey}`)
+                        let staker = await ctx.store.findOneByOrFail(Staker, { id: blsPubKey })
+                        let contract = new depositAbi.Contract(ctx, block.header, CONTRACT_ADDRESS)
+                        let { index, stakerData } = await contract.getStakerData(staker.id)
+                        ctx.log.info(`Retrieved staker data: ${index} ${stakerData.peerId} ${stakerData.controlAddress} ${stakerData.rewardAddress} ${stakerData.signingAddress}`)
+                        staker.index = Number(index) - 1
+                        staker.peerId = hexToBytes(stakerData.peerId)
+                        staker.controlAddressHash = hexToBytes(stakerData.controlAddress)
+                        staker.rewardAddressHash = hexToBytes(stakerData.rewardAddress)
+                        staker.signingAddressHash = hexToBytes(stakerData.signingAddress)
+                        staker.updatedAt = new Date()
+                        keyToStaker.set(staker.id, staker)
+                    }
+                    break
+                case depositAbi.events.StakerMoved.topic:
+                    {
+                        let { blsPubKey, newPosition, atFutureBlock } = depositAbi.events.StakerMoved.decode(log)
+                        ctx.log.info(`StakerMoved: ${blsPubKey} to position ${newPosition} at block ${atFutureBlock}`)
+                        let staker = await ctx.store.findOneByOrFail(Staker, { id: blsPubKey })
+                        staker.index = Number(newPosition) - 1
+                        keyToStaker.set(staker.id, staker)
+                    }
                     break
                 default:
                     break
